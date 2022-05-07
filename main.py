@@ -1,11 +1,8 @@
-from distutils.log import error
+import os
 from dotenv import load_dotenv
-from unicodedata import name
-import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from cogs.rdv import RDV
-import http.client
 
 # load environment variables from .env
 load_dotenv()
