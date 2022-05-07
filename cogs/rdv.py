@@ -1,6 +1,7 @@
 from random import choices
 from typing import List
 import discord
+import globals
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option, OptionChoice
 
@@ -13,22 +14,6 @@ class RDV(commands.Cog):
     rdv = SlashCommandGroup(name = 'rdv', \
         description = 'Rendezvous commands.', guild_ids=DebuggingConstants.guild_ids)
 
-    usage = """
-        ```
-        LIST OF COMMANDS
-        1.  /rdv help                     -- Show this help message.
-        2.  /rdv [team]                   -- Show events about a sports team.
-        3.  /rdv random                   -- Show a random event.
-        4.  /rdv price {free/paid}        -- Filter events by price.
-        5.  /rdv place {indoors/outdoors} -- Filter events by place.
-        6.  /rdv top {int index}          -- Show the events with the most interest.
-        7.  /rdv upcoming {int index}     -- Show upcoming events.
-        8.  /rdv new                      -- Show new events.
-        9.  /rdv {date (mm-dd)}           -- Show events on a particular date.
-        10. /rdv sub {event name}         -- subscribe to an event.
-        ```
-    """
-
     # COMMANDS
     # help: DM help to user
     @rdv.command(description='Show the list of commands.')
@@ -37,6 +22,14 @@ class RDV(commands.Cog):
         user = ctx.interaction.user
         await user.send(self.usage)
         await ctx.respond('DM\'ed {} the command list.'.format(user.mention))
+
+    # suggest
+    @rdv.command(description='Displays a random event.')
+    async def suggest(self, ctx: ApplicationContext):
+        eventsrc = globals.apireq.makeTicketMasterAPICall(\
+            globals.eventToken, "/discovery/v2/suggest")
+        print(eventsrc.result)
+        await ctx.respond('f00f')
 
     # random
     @rdv.command(description='Fetches a random event.')
