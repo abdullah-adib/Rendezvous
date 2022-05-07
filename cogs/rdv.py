@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option, OptionChoice
 
-from guilds import DebuggingConstants
+from utils.guilds import DebuggingConstants
 
 class RDV(commands.Cog):
     # Initialize the cog

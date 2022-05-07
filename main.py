@@ -4,7 +4,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from cogs.rdv import RDV
 import http.client
-from event_requester import EventRequester
+from utils.event_requester import EventRequester
 import os
 import time
 
