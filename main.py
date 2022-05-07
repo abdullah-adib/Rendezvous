@@ -1,5 +1,5 @@
 from distutils.log import error
-import os
+from dotenv import load_dotenv
 from unicodedata import name
 import discord
 from discord.ext import commands
@@ -20,7 +20,6 @@ bot = commands.Bot(command_prefix=prefix)
 @bot.event
 async def on_ready():
     print('Bot has started!')
-
 # start bot
 if token is None:
     print('Bot token is missing! Please check environment variables!')
