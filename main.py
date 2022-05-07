@@ -1,5 +1,5 @@
 # Imports
-from asyncio.windows_events import NULL
+# from asyncio.windows_events import NULL
 from distutils.log import error
 import os
 from unicodedata import name
@@ -9,7 +9,11 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
-bot = commands.Bot(command_prefix='/')
+
+
+prefix: str = os.environ.get('PREFIX')
+
+bot = commands.Bot(command_prefix=prefix)
 
 @bot.command(name='ping')
 async def ping(ctx: commands.Context):
