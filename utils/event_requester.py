@@ -39,14 +39,17 @@ class EventRequester:
         if requestStr in self.requestCache:
             print('value was cached')
             cached = self.requestCache[requestStr]
-            # update delta time if needed
-            if cached.deltaTime != deltaTime:
-                print("updating delta time")
-                cached.deltaTime = deltaTime
-            if now - cached.timeCreated > cached.deltaTime:
-                # update old cached results
-                print('cache is old, updating ...')
+            if cached.result == None:
                 self.__newEventRequest(token, requestStr, now, deltaTime)
+            else:
+                # update delta time if needed
+                if cached.deltaTime != deltaTime:
+                    print("updating delta time")
+                    cached.deltaTime = deltaTime
+                if now - cached.timeCreated > cached.deltaTime:
+                    # update old cached results
+                    print('cache is old, updating ...')
+                    self.__newEventRequest(token, requestStr, now, deltaTime)
         else:
             print('value was not cached')
             self.__newEventRequest(token, requestStr, now, deltaTime)
