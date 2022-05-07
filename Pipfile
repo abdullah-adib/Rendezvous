@@ -7,6 +7,7 @@ name = "pypi"
 py-cord = "==2.0.0b7"
 discord = "*"
 python-dotenv = "*"
+eventbrite = "==3.3.5"
 
 [dev-packages]
 
