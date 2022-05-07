@@ -1,6 +1,5 @@
 #  ================ Imports ==================
 from asyncio.windows_events import NULL
-from eventbrite import Eventbrite
 from discord.ext import commands
 from distutils.log import error
 from dotenv import load_dotenv
@@ -10,9 +9,6 @@ import os
 # ===========================================
 
 load_dotenv() # Load the dotenv file
-
-api_token: str = os.environ.get('API_TOKEN') # Get the API token from the dotenv file
-eventbrite = Eventbrite(api_token) # Eventbrite API initialization 
 
 prefix: str = os.environ.get('PREFIX') # Get the prefix from the dotenv file
 bot = commands.Bot(command_prefix=prefix)
