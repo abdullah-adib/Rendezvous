@@ -127,7 +127,12 @@ class RDV(commands.Cog):
         if eventsrc == None:
             print("error")
             return
+        
         event = json.loads(eventsrc)
+        if '_embedded' not in event:
+            await ctx.respond(f'I can\'t find any events at {venueName}, {venueCountry}')
+            return
+        
         tmp = printerNumbered(filter1(event, 5))
         embed=discord.Embed(title=f"Events at {venueName}, {venueCountry}", description=tmp, color=0xff00f7)
         embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url="https://cdn.discordapp.com/icons/928825084297244692/1f3858a72bc26b3a617141acaad37a53.png")
