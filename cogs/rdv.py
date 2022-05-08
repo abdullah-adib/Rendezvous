@@ -15,7 +15,7 @@ from utils.event_requester import EventRequest
 # returns an array of Filter1Element
 def filter1(events, maxEvents):
     return [ Filter1Element(x['name'], x['url'], \
-        x['classifications'][0]['segment']['name'], \
+        x['classifications'][0]['segment']['name'] if 'classifications' in x else None, \
         x['dates']['start']['localDate']) \
         for x in events['_embedded']['events'] ][0:maxEvents ]
 
@@ -32,7 +32,7 @@ def printerNumbered(filter1List):
         labels.append(x.toString())
     labels = list(enumerate(labels))
     for x in labels:
-        tmp.append("{}. {}".format(x[0], x[1]))
+        tmp.append("{}. {}".format(x[0] + 1, x[1]))
     return "".join(tmp)
 
 class Filter1Element:
@@ -88,24 +88,16 @@ class RDV(commands.Cog):
         await ctx.respond('f00f')
 
     # date
-    @rdv.command(description='Fetches events on or after a specific date.')
-    async def date(self, ctx: ApplicationContext, year: Option(int, description='The target year.', min_value=0), month: Option(int, description='The target month.', min_value=1, max_value=12), day: Option(int, description='The target day.', min_value=1, max_value=31)):
+    @rdv.command(description='Fetches events on a specific date.')
+    async def date(self, ctx: ApplicationContext, year: Option(int, description='The target year.', min_value=1000), month: Option(int, description='The target month.', min_value=1, max_value=12), day: Option(int, description='The target day.', min_value=1, max_value=31)):
         dateStr = f"{year:04}-{month:02}-{day:02}"
-        eventsrc = globals.apireq.makeTicketMasterAPICall2(globals.eventToken, '/discovery/v2/events', [ f'startDateTime={dateStr}T00:00:00Z']).result
+        eventsrc = globals.apireq.makeTicketMasterAPICall2(globals.eventToken, '/discovery/v2/events', [ f'localStartDateTime={dateStr}T00:00:00,{dateStr}T11:59:59', f'sort=date,asc']).result
         if eventsrc == None:
             print("error")
             return
         event = json.loads(eventsrc)
-
-        eventLabels = list(enumerate([ (x['name'], x['url'], x['classifications'][0]['segment']['name'] ) for x in event['_embedded']['events'] ][0:5]))
-        func = lambda x: "{}. {} {}\n {}\n\n".format(x[0] + 1, x[1][0], globals.classToEmoji(x[1][2]), x[1][1])
-        funcLast = lambda x: "{}. {} {}\n {}\n\n".format(x[0] + 1, x[1][0], globals.classToEmoji(x[1][2]), x[1][1])
-        labels = []
-        for x in eventLabels[0:-1]:
-            print(func(x))
-            labels.append(func(x))
-        labels.append(funcLast(eventLabels[-1]))
-        embed=discord.Embed(title=f"EVENTS ON OR AFTER {dateStr}", description="".join(labels), color=0xff00f7)
+        tmp = printerNumbered(filter1(event, 5))
+        embed=discord.Embed(title=f"Events on {dateStr}", description=tmp, color=0xff00f7)
         embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url="https://cdn.discordapp.com/icons/928825084297244692/1f3858a72bc26b3a617141acaad37a53.png")
         embed.set_footer(text="Data provided by ticketmaster.com")
         await ctx.respond(embed = embed)
