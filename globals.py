@@ -17,3 +17,13 @@ LIST OF COMMANDS
 ```
 """
 apireq = None
+__classToEmoji = { 
+    'Arts & Theatre': '🎭',
+    'Music': '🎶',
+    'Sports': '🏀',
+}
+
+def classToEmoji(className):
+    print(className)
+    return __classToEmoji[className] if className in __classToEmoji else '🎟️'
+
