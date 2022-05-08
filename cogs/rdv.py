@@ -18,12 +18,49 @@ def getEmbed(title, description):
     embed.set_footer(text="Data provided by ticketmaster.com")
     return embed
 
+def getDropdownMenuEventEmbed(eventID):
+    eventsrc = globals.apireq.makeTicketMasterAPICall(globals.eventToken, "/discovery/v2/events/{}".format(eventID)).result
+    if eventsrc == None:
+        print("error")
+        return
+    event = json.loads(eventsrc)
+    tmp = filter2(event, 1)
+    embed = getEmbed(tmp.name, tmp.toString())
+    embed.set_image(url = tmp.image)
+    return embed
+
+class Select(discord.ui.Select):
+    def __init__(self, opt):
+        super().__init__(placeholder="Select an event to view more details",max_values=1,min_values=1,options=opt)
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message(embed = getDropdownMenuEventEmbed(self.values[0]) ,ephemeral=True)
+
+class SelectView(discord.ui.View):
+    def __init__(self, opt, timeout = 180):
+        super().__init__(timeout=timeout)
+        self.add_item(Select(opt))
+
+# returns an array of Filter1Element
+def filter2(x, maxEvents):
+    return Filter1Element(x['name'], x['url'], \
+        x['classifications'][0]['segment']['name'] if 'classifications' in x else None, \
+        x['dates']['start']['localDate'], x['id'], x['images'][0]['url'])
+
 # returns an array of Filter1Element
 def filter1(events, maxEvents):
     return [ Filter1Element(x['name'], x['url'], \
         x['classifications'][0]['segment']['name'] if 'classifications' in x else None, \
-        x['dates']['start']['localDate']) \
-        for x in events['_embedded']['events'] ][0:maxEvents ]
+        x['dates']['start']['localDate'], x['id']) \
+        for x in events['_embedded']['events'] ][0:maxEvents]
+
+def getDropdownMenu(filter1List):
+    opt = []
+    i = 1
+    for x in filter1List:
+        opt.append(discord.SelectOption(label="{}. {}".format(i, x.name), \
+            value = x.ID, emoji = globals.classToEmoji(x.classifications)))
+        # i++
+    return SelectView(opt)
 
 def printer(filter1List):
     labels = []
@@ -44,14 +81,18 @@ def printerNumbered(filter1List):
 class Filter1Element:
     name = ''
     url = ''
+    ID = ''
     classifications = ''
     localDate = ''
-    def __init__(self, name, url, classifications, localDate):
+    image = ''
+    def __init__(self, name, url, classifications, localDate, ID, image = ''):
         tmp = lambda x: x if x != None else ''
         self.classifications = tmp(classifications)
         self.name = tmp(name)
         self.url = tmp(url)
         self.localDate = tmp(localDate)
+        self.ID = ID
+        self.image = image
     def toString(self):
         return "{} {} ({}) \n {} \n\n".format(self.name, \
             globals.classToEmoji(self.classifications), self.localDate, \
@@ -89,8 +130,10 @@ class RDV(commands.Cog):
             print("error")
             return
         event = json.loads(eventsrc)
+        filterList = filter1(event, 5)
         await ctx.respond(embed = getEmbed("Suggested events", \
-            printerNumbered(filter1(event, 5))))
+            printerNumbered(filterList)))
+        await ctx.respond(view = getDropdownMenu(filterList))
 
     # debug
     @rdv.command(description='Debugging')
