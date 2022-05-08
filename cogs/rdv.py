@@ -36,18 +36,24 @@ class RDV(commands.Cog):
             print("error")
             return
         event = json.loads(eventsrc)
-        embed = discord.Embed(title="SUGGESTED EVENTS")
-        i = 0
-        for x in event['_embedded']['events']:
-            if i >= 5:
-                break
-            embed.add_field(name = "{}".format(i + 1), value = x['name'])
+
+        eventLabels = list(enumerate([ (x['name'], x['url'], x['classifications'][0]['segment']['name'] ) for x in event['_embedded']['events'] ][0:5]))
+        func = lambda x: "{}. {} {}\n {}\n\n".format(x[0] + 1, x[1][0], globals.classToEmoji(x[1][2]), x[1][1])
+        funcLast = lambda x: "{}. {} {}\n {}\n\n".format(x[0] + 1, x[1][0], globals.classToEmoji(x[1][2]), x[1][1])
+        labels = []
+        for x in eventLabels[0:-1]:
+            print(func(x))
+            labels.append(func(x))
+        labels.append(funcLast(eventLabels[-1]))
+        embed=discord.Embed(title="Suggested events", description="".join(labels), color=0xff00f7)
+        embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url="https://cdn.discordapp.com/icons/928825084297244692/1f3858a72bc26b3a617141acaad37a53.png")
+        embed.set_footer(text="Data provided by ticketmaster.com")
         await ctx.respond(embed = embed)
 
-    # random
-    @rdv.command(description='Fetches a random event.')
-    async def random(self, ctx: ApplicationContext):
-        await ctx.respond('Fetching random event... (This is just a test.)')
+    # debug
+    @rdv.command(description='Debugging')
+    async def debug(self, ctx: ApplicationContext):
+        await ctx.respond('f00f')
 
     # date
     @rdv.command(description='Fetches events on or after a specific date.')
