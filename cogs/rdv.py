@@ -29,16 +29,36 @@ def getDropdownMenuEventEmbed(eventID):
     embed.set_image(url = tmp.image)
     return embed
 
+def getDropdownMenuEventVenue(venueID):
+    # eventsrc = globals.apireq.makeTicketMasterAPICall(globals.eventToken, "/discovery/v2/venues/{}".format(venueID)).result
+    eventsrc = globals.apireq.makeTicketMasterAPICall(globals.eventToken, "/discovery/v2/venues/KovZpZA7AAEA").result
+    if eventsrc == None:
+        print("error")
+        return
+    event = json.loads(eventsrc)
+    tmp = filter3(event, 1)
+    embed = getEmbed(tmp.name, tmp.toString())
+    embed.set_image(url = tmp.image)
+    return embed
+
+
 class Select(discord.ui.Select):
     def __init__(self, opt):
         super().__init__(placeholder="Select an event to view more details",max_values=1,min_values=1,options=opt)
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_message(embed = getDropdownMenuEventEmbed(self.values[0]) ,ephemeral=True)
+        print(self.values[0])
+        if self.values[0][0] == '1':
+            await interaction.response.send_message(embed = getDropdownMenuEventEmbed(self.values[0][1:]) ,ephemeral=True)
+        elif self.values[0][0] == '0':
+            await interaction.response.send_message(embed = getDropdownMenuEventVenue(self.values[0][1:]) ,ephemeral=True)
 
 class SelectView(discord.ui.View):
     def __init__(self, opt, timeout = 180):
         super().__init__(timeout=timeout)
         self.add_item(Select(opt))
+
+def filter3(x, maxEvents):
+    return Filter1Element(x['name'], x['url'], '', '', x['id'], x['images'][0]['url'])
 
 # returns an array of Filter1Element
 def filter2(x, maxEvents):
@@ -53,13 +73,14 @@ def filter1(events, maxEvents):
         x['dates']['start']['localDate'], x['id']) \
         for x in events['_embedded']['events'] ][0:maxEvents]
 
-def getDropdownMenu(filter1List):
+def getDropdownMenu(filter1List, isEvent):
     opt = []
     i = 1
+    idx = '1' if isEvent == True else '0'
     for x in filter1List:
         opt.append(discord.SelectOption(label="{}. {}".format(i, x.name), \
-            value = x.ID, emoji = globals.classToEmoji(x.classifications)))
-        # i++
+            value = idx + x.ID, emoji = globals.classToEmoji(x.classifications)))
+        i = i + 1
     return SelectView(opt)
 
 def printer(filter1List):
@@ -94,8 +115,8 @@ class Filter1Element:
         self.ID = ID
         self.image = image
     def toString(self):
-        return "{} {} ({}) \n {} \n\n".format(self.name, \
-            globals.classToEmoji(self.classifications), self.localDate, \
+        return "{} {} {} \n {} \n\n".format(self.name, \
+            globals.classToEmoji(self.classifications), "({})".format(self.localDate) if self.localDate != '' else '', \
             self.url)
 
 class RDV(commands.Cog):
@@ -133,7 +154,7 @@ class RDV(commands.Cog):
         filterList = filter1(event, 5)
         await ctx.respond(embed = getEmbed("Suggested events", \
             printerNumbered(filterList)))
-        await ctx.respond(view = getDropdownMenu(filterList))
+        await ctx.respond(view = getDropdownMenu(filterList, True))
 
     # debug
     @rdv.command(description='Debugging')
@@ -150,8 +171,10 @@ class RDV(commands.Cog):
             print("error")
             return
         event = json.loads(eventsrc)
+        tmp = filter1(event, 5)
         await ctx.respond(embed = getEmbed(f"Events on {dateStr}", \
-            printerNumbered(filter1(event, 5))))
+            printerNumbered(tmp)))
+        await ctx.respond(view = getDropdownMenu(tmp, True))
 
     # venue
     @rdv.command(description='Fetches events at a venue.')
@@ -183,11 +206,13 @@ class RDV(commands.Cog):
             await ctx.respond(f'I can\'t find any events at {venueName}, {venueCountry}')
             return
         
-        tmp = printerNumbered(filter1(event, 5))
+        filterlist = filter1(event, 5)
+        tmp = printerNumbered(filterlist)
         embed=discord.Embed(title=f"Events at {venueName}, {venueCountry}", description=tmp, color=0xff00f7)
         embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url="https://cdn.discordapp.com/icons/928825084297244692/1f3858a72bc26b3a617141acaad37a53.png")
         embed.set_footer(text="Data provided by ticketmaster.com")
         await ctx.respond(embed = embed)
+        await ctx.respond(view = getDropdownMenu(filterlist, False))
 
     # city : retrives list of events in city
     @rdv.command(description='Fetches events in a particular city.')
@@ -199,7 +224,9 @@ class RDV(commands.Cog):
             return
         try:
             event = json.loads(eventsrc)
+            tmp = filter1(event, 5)
             await ctx.respond(embed = getEmbed(f"Events in {city}", \
-                    printerNumbered(filter1(event, 5))))
+                    printerNumbered(tmp)))
+            await ctx.respond(view = getDropdownMenu(tmp, True))
         except KeyError as e:
             await ctx.respond(f'No events found in {city}.')
