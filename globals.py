@@ -11,6 +11,8 @@ __classToEmoji = {
     'Sports': '🏀',
 }
 
+iconURL = "https://cdn.discordapp.com/attachments/971866244875714575/972742833930899486/sunny.jpg"
+
 def classToEmoji(className):
     print(className)
     return __classToEmoji[className] if className in __classToEmoji else '🎟️'
