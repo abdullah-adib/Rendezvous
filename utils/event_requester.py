@@ -36,20 +36,25 @@ class EventRequester:
         res = conn.getresponse()
         return res.read().decode('utf-8')
 
-    def __newEventRequest(self, token, requestStr, now, deltaTime, apicaller):
-        self.requestCache[requestStr] = EventRequest(requestStr, \
-            apicaller(token, requestStr), now, deltaTime)
+    def getCacheKey(self, token, requestStr):
+        return token + requestStr
 
-    def makeTicketMasterAPICall(self, token, requestStr, deltaTime = 3600):
+    def __newEventRequest(self, token, requestStr, now, deltaTime, apicaller, key):
+        self.requestCache[key] = EventRequest(requestStr, apicaller(token, \
+            requestStr), now, deltaTime)
+
+    def __makeTicketMasterAPICall(self, token, requestStr, deltaTime, \
+        APICaller):
         now = getUnixTime()
         ret = None
+        key = self.getCacheKey(token, requestStr)
         # check cache
-        if requestStr in self.requestCache:
+        if key in self.requestCache:
             print('value was cached')
-            cached = self.requestCache[requestStr]
+            cached = self.requestCache[key]
             if cached.result == None:
                 self.__newEventRequest(token, requestStr, now, deltaTime, \
-                    self.__makeTicketMasterAPICallSingle)
+                    APICaller, key)
             else:
                 # update delta time if needed
                 if cached.deltaTime != deltaTime:
@@ -59,12 +64,16 @@ class EventRequester:
                     # update old cached results
                     print('cache is old, updating ...')
                     self.__newEventRequest(token, requestStr, now, deltaTime, \
-                        self.__makeTicketMasterAPICallSingle)
+                        APICaller, key)
         else:
             print('value was not cached')
             self.__newEventRequest(token, requestStr, now, deltaTime, \
-                self.__makeTicketMasterAPICallSingle)
-        return self.requestCache[requestStr]
+                APICaller, key)
+        return self.requestCache[key]
+
+    def makeTicketMasterAPICall(self, token, requestStr, deltaTime = 3600):
+        return self.__makeTicketMasterAPICall(token, requestStr, \
+            deltaTime, self.__makeTicketMasterAPICallSingle)
 
     def makeTicketMasterAPICall2(self, token, requestStr, requestStrParams, deltaTime = 3600):
         newtoken = requestStrParams
@@ -76,28 +85,6 @@ class EventRequester:
         tmp.append('apikey=')
         tmp.append(newtoken[-1])
         newToken = "".join(tmp)
-        now = getUnixTime()
-        ret = None
-        # check cache
-        if requestStr in self.requestCache:
-            print('value was cached')
-            cached = self.requestCache[requestStr]
-            if cached.result == None:
-                self.__newEventRequest(newToken, requestStr, now, deltaTime, \
-                    self.__makeTicketMasterAPICallMulti)
-            else:
-                # update delta time if needed
-                if cached.deltaTime != deltaTime:
-                    print("updating delta time")
-                    cached.deltaTime = deltaTime
-                if now - cached.timeCreated > cached.deltaTime:
-                    # update old cached results
-                    print('cache is old, updating ...')
-                    self.__newEventRequest(newToken, requestStr, now, deltaTime, \
-                        self.__makeTicketMasterAPICallMulti)
-        else:
-            print('value was not cached')
-            self.__newEventRequest(newToken, requestStr, now, deltaTime, \
-                self.__makeTicketMasterAPICallMulti)
-        return self.requestCache[requestStr]
+        return self.__makeTicketMasterAPICall(newToken, requestStr, \
+            deltaTime, self.__makeTicketMasterAPICallMulti)
 
