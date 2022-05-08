@@ -91,6 +91,7 @@ class RDV(commands.Cog):
     @rdv.command(description='Fetches events on a specific date.')
     async def date(self, ctx: ApplicationContext, year: Option(int, description='The target year.', min_value=1000), month: Option(int, description='The target month.', min_value=1, max_value=12), day: Option(int, description='The target day.', min_value=1, max_value=31)):
         dateStr = f"{year:04}-{month:02}-{day:02}"
+        await ctx.respond(f'Fetching events on {dateStr}...')
         eventsrc = globals.apireq.makeTicketMasterAPICall2(globals.eventToken, '/discovery/v2/events', [ f'localStartDateTime={dateStr}T00:00:00,{dateStr}T11:59:59', f'sort=date,asc']).result
         if eventsrc == None:
             print("error")
@@ -102,6 +103,41 @@ class RDV(commands.Cog):
         embed.set_footer(text="Data provided by ticketmaster.com")
         await ctx.respond(embed = embed)
 
+    # venue
+    @rdv.command(description='Fetches events at a venue.')
+    async def venue(self, ctx: ApplicationContext, venue: Option(str, description='The venue to search.')):
+        await ctx.respond(f'Fetching events at a venue matching \"{venue}\"...')
+        sanitizedVenue = venue.replace(' ', '%20')
+        venuessrc = globals.apireq.makeTicketMasterAPICall2(globals.eventToken, '/discovery/v2/venues', [ f'keyword={sanitizedVenue}', 'size=1', 'page=0']).result
+        if venuessrc == None:
+            print('error')
+            return
+        
+        venuesJson = json.loads(venuessrc)
+        if '_embedded' not in venuesJson:
+            await ctx.respond(f'I can\'t find any venues matching \"{venue}\"')
+            return
+        
+        firstVenue = venuesJson['_embedded']['venues'][0]
+        venueId = firstVenue['id']
+        venueName = firstVenue['name']
+        venueCountry = firstVenue['country']['name']
+
+        eventsrc = globals.apireq.makeTicketMasterAPICall2(globals.eventToken, '/discovery/v2/events', [ f'venueId={venueId}']).result
+        if eventsrc == None:
+            print("error")
+            return
+        
+        event = json.loads(eventsrc)
+        if '_embedded' not in event:
+            await ctx.respond(f'I can\'t find any events at {venueName}, {venueCountry}')
+            return
+        
+        tmp = printerNumbered(filter1(event, 5))
+        embed=discord.Embed(title=f"Events at {venueName}, {venueCountry}", description=tmp, color=0xff00f7)
+        embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url="https://cdn.discordapp.com/icons/928825084297244692/1f3858a72bc26b3a617141acaad37a53.png")
+        embed.set_footer(text="Data provided by ticketmaster.com")
+        await ctx.respond(embed = embed)
     # city : retrives list of events in city
     @rdv.command(description='Fetches events in a particular city.')
     async def city(self, ctx: ApplicationContext, city: str):
