@@ -71,7 +71,14 @@ class RDV(commands.Cog):
     # @rdv.command(description='Shows a description on how to use this bot.')
     async def help(self, ctx: ApplicationContext):
         user = ctx.interaction.user
-        await user.send(globals.usage)
+        embed=discord.Embed(title="List of commands", description="Below are the possible commands than can be run by the bot. ", color=0x00ff40)
+        embed.set_author(name="Rendezvous Bot ~ RDV", url="https://github.com/abdullah-adib/RU-Hacks-2022-Discord", icon_url="https://github.com/abdullah-adib/RU-Hacks-2022-Rendezvous-Discord-Bot/blob/main/assets/you.png")
+        embed.add_field(name="/rdv suggest", value="-- Find random events.", inline=False)
+        embed.add_field(name="/rdv city", value="-- Search for an event based on your city of choice.", inline=False)
+        embed.add_field(name="/rdv date", value="-- Search for an event on a specifc date. [ YY-MM-DD ]", inline=False)
+        embed.add_field(name="/rdv venue", value="-- Search for events at a specific venue.", inline=False)
+        embed.set_footer(text="Want to contribute? Go to https://tinyurl.com/yckmaes3.")
+        await user.send(embed=embed)
         await ctx.respond('DM\'ed {} the command list.'.format(user.mention))
     
     # suggest
@@ -138,6 +145,7 @@ class RDV(commands.Cog):
         embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url="https://cdn.discordapp.com/icons/928825084297244692/1f3858a72bc26b3a617141acaad37a53.png")
         embed.set_footer(text="Data provided by ticketmaster.com")
         await ctx.respond(embed = embed)
+
     # city : retrives list of events in city
     @rdv.command(description='Fetches events in a particular city.')
     async def city(self, ctx: ApplicationContext, city: str):
