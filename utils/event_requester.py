@@ -25,7 +25,6 @@ class EventRequester:
     def __makeTicketMasterAPICallSingle(self, token, requestStr):
         conn = http.client.HTTPSConnection("app.ticketmaster.com")
         tmp = "{}?apikey={}".format(requestStr, token)
-        print(tmp)
         conn.request("GET", tmp)
         res = conn.getresponse()
         return res.read().decode('utf-8')
@@ -33,7 +32,6 @@ class EventRequester:
     def __makeTicketMasterAPICallMulti(self, token, requestStr):
         conn = http.client.HTTPSConnection("app.ticketmaster.com")
         tmp = "{}?{}".format(requestStr, token)
-        print(tmp)
         conn.request("GET", tmp)
         res = conn.getresponse()
         return res.read().decode('utf-8')
