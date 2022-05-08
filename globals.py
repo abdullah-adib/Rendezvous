@@ -1,7 +1,10 @@
-prefix = ''
-token = ''
-eventToken = ''
-usage = """
+from utils.event_requester import EventRequester
+
+
+prefix: str = ''
+token: str = ''
+eventToken: str = ''
+usage: str = """
 ```
 LIST OF COMMANDS
 1.  /rdv help                     -- Show this help message.
@@ -16,4 +19,4 @@ LIST OF COMMANDS
 10. /rdv sub {event name}         -- subscribe to an event.
 ```
 """
-apireq = None
+apireq: EventRequester = None

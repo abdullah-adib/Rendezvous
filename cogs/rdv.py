@@ -1,5 +1,7 @@
+from datetime import datetime
 from random import choices
 from typing import List
+from unicodedata import name
 import discord
 import globals
 import json
@@ -47,6 +49,20 @@ class RDV(commands.Cog):
     async def random(self, ctx: ApplicationContext):
         await ctx.respond('Fetching random event... (This is just a test.)')
 
-    @rdv.command(description='Fetches events based on whether it is free or paid.')
-    async def price(self, ctx: ApplicationContext, price_type: Option(str, choices=['free', 'paid'])):
-        await ctx.respond(f'Fetching {price_type} events...')
+    # date
+    @rdv.command(description='Fetches events on or after a specific date.')
+    async def date(self, ctx: ApplicationContext, year: Option(int, description='The target year.', min_value=0), month: Option(int, description='The target month.', min_value=1, max_value=12), day: Option(int, description='The target day.', min_value=1, max_value=31)):
+        dateStr = f"{year:04}-{month:02}-{day:02}"
+        eventsrc = globals.apireq.makeTicketMasterAPICall( globals.eventToken, f"/discovery/v2/events?startDateTime={dateStr}T00:00:00Z").result
+        print(str(eventsrc))
+        if eventsrc == None:
+            print("error")
+            return
+        event = json.loads(eventsrc)
+        embed = discord.Embed(title=f"EVENTS ON OR AFTER {year}-{month}-{day}")
+        i = 0
+        for x in event['_embedded']['events']:
+            if i >= 5:
+                break
+            embed.add_field(name = "{}".format(i + 1), value = x['name'])
+        await ctx.respond(embed = embed)
