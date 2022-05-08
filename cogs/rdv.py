@@ -12,6 +12,12 @@ from discord.commands import SlashCommandGroup, ApplicationContext, Option, \
 from utils.debugging_constants import DebuggingConstants
 from utils.event_requester import EventRequest
 
+def getEmbed(title, description):
+    embed = discord.Embed(title=title, description=description, color=0xff00f7)
+    embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url=globals.iconURL)
+    embed.set_footer(text="Data provided by ticketmaster.com")
+    return embed
+
 # returns an array of Filter1Element
 def filter1(events, maxEvents):
     return [ Filter1Element(x['name'], x['url'], \
@@ -67,7 +73,7 @@ class RDV(commands.Cog):
         user = ctx.interaction.user
         await user.send(globals.usage)
         await ctx.respond('DM\'ed {} the command list.'.format(user.mention))
-
+    
     # suggest
     @rdv.command(description='Displays a random event.')
     async def suggest(self, ctx: ApplicationContext):
@@ -76,11 +82,8 @@ class RDV(commands.Cog):
             print("error")
             return
         event = json.loads(eventsrc)
-        tmp = printerNumbered(filter1(event, 5))
-        embed=discord.Embed(title="Suggested events", description=tmp, color=0xff00f7)
-        embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url=globals.iconURL)
-        embed.set_footer(text="Data provided by ticketmaster.com")
-        await ctx.respond(embed = embed)
+        await ctx.respond(embed = getEmbed("Suggested events", \
+            printerNumbered(filter1(event, 5))))
 
     # debug
     @rdv.command(description='Debugging')
@@ -96,11 +99,8 @@ class RDV(commands.Cog):
             print("error")
             return
         event = json.loads(eventsrc)
-        tmp = printerNumbered(filter1(event, 5))
-        embed=discord.Embed(title=f"Events on {dateStr}", description=tmp, color=0xff00f7)
-        embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url=globals.iconURL)
-        embed.set_footer(text="Data provided by ticketmaster.com")
-        await ctx.respond(embed = embed)
+        await ctx.respond(embed = getEmbed(f"Events on {dateStr}", \
+            printerNumbered(filter1(event, 5))))
 
     # city : retrives list of events in city
     @rdv.command(description='Fetches events in a particular city.')
@@ -112,11 +112,7 @@ class RDV(commands.Cog):
             return
         try:
             event = json.loads(eventsrc)
-            temp = printerNumbered(filter1(event, 5))
-            embed = discord.Embed(title=f"Events in {city}", description=temp, color=0xff00f7)
-            embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url=globals.iconURL)
-            embed.set_footer(text="Data provided by ticketmaster.com")
-            await ctx.respond(embed = embed)
-
+            await ctx.respond(embed = getEmbed(f"Events in {city}", \
+                    printerNumbered(filter1(event, 5))))
         except KeyError as e:
             await ctx.respond(f'No events found in {city}.')
