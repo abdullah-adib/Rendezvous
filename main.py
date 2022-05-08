@@ -21,9 +21,9 @@ globals.apireq = EventRequester()
 
 # http://app.ticketmaster.com?&apikey=
 
-globals.apireq.makeTicketMasterAPICall2('euPCM1HnI3S8NWM68MCzLKR5mwicWGhv', '/discovery/v2/events', [ 'startDateTime=2022-06-07T00:00:00Z'])
+# globals.apireq.makeTicketMasterAPICall2('euPCM1HnI3S8NWM68MCzLKR5mwicWGhv', '/discovery/v2/events', [ 'startDateTime=2022-06-07T00:00:00Z'])
+# exit
 
-exit
 # EventRequester example usage
 # a = ereq.makeTicketMasterAPICall(eventToken, "/discovery/v2/suggest") # default update time is 1 hour
 # a = ereq.makeTicketMasterAPICall(eventToken, "/discovery/v2/suggest") # this will be cached 
