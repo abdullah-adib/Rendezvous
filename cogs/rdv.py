@@ -9,7 +9,6 @@ from discord.ext import commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option, \
     OptionChoice
 
-from utils.debugging_constants import DebuggingConstants
 from utils.event_requester import EventRequest
 
 def getEmbed(title, description):
@@ -134,8 +133,7 @@ class RDV(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
     rdv = SlashCommandGroup(name = 'rdv', \
-        description = 'Rendezvous commands.', \
-        guild_ids=DebuggingConstants.guild_ids)
+        description = 'Rendezvous commands.')
 
     # COMMANDS
     # help: DM help to user
@@ -167,9 +165,9 @@ class RDV(commands.Cog):
         await ctx.respond(view = getDropdownMenu(filterList, True))
 
     # debug
-    @rdv.command(description='Debugging')
-    async def debug(self, ctx: ApplicationContext):
-        await ctx.respond('f00f')
+    # @rdv.command(description='Debugging')
+    # async def debug(self, ctx: ApplicationContext):
+    #     await ctx.respond('f00f')
 
     # date
     @rdv.command(description='Fetches events on a specific date.')
