@@ -101,3 +101,22 @@ class RDV(commands.Cog):
         embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url="https://cdn.discordapp.com/icons/928825084297244692/1f3858a72bc26b3a617141acaad37a53.png")
         embed.set_footer(text="Data provided by ticketmaster.com")
         await ctx.respond(embed = embed)
+
+    # city : retrives list of events in city
+    @rdv.command(description='Fetches events in a particular city.')
+    async def city(self, ctx: ApplicationContext, city: str):
+        await ctx.respond(f'Fetching events in {city}...')
+        eventsrc = globals.apireq.makeTicketMasterAPICall2(globals.eventToken, "/discovery/v2/events", ["city={}".format(city)]).result
+        if eventsrc == None:
+            print("error")
+            return
+        try:
+            event = json.loads(eventsrc)
+            temp = printerNumbered(filter1(event, 5))
+            embed = discord.Embed(title=f"Events in {city}", description=temp, color=0xff00f7)
+            embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url="https://cdn.discordapp.com/icons/928825084297244692/1f3858a72bc26b3a617141acaad37a53.png")
+            embed.set_footer(text="Data provided by ticketmaster.com")
+            await ctx.respond(embed = embed)
+
+        except KeyError as e:
+            await ctx.respond(f'No events found in {city}.')
