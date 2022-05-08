@@ -42,10 +42,10 @@ class RDV(commands.Cog):
             embed.add_field(name = "{}".format(i + 1), value = x['name'])
         await ctx.respond(embed = embed)
 
-    # random
-    @rdv.command(description='Fetches a random event.')
-    async def random(self, ctx: ApplicationContext):
-        await ctx.respond('Fetching random event... (This is just a test.)')
+    # debug
+    @rdv.command(description='Debugging')
+    async def debug(self, ctx: ApplicationContext):
+        await ctx.respond('f00f')
 
     @rdv.command(description='Fetches events based on whether it is free or paid.')
     async def price(self, ctx: ApplicationContext, price_type: Option(str, choices=['free', 'paid'])):
