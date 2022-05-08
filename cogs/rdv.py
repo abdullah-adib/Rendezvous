@@ -30,6 +30,7 @@ def getDropdownMenuEventEmbed(eventID):
     return embed
 
 def getDropdownMenuEventVenue(venueID):
+    print(venueID)
     # eventsrc = globals.apireq.makeTicketMasterAPICall(globals.eventToken, "/discovery/v2/venues/{}".format(venueID)).result
     eventsrc = globals.apireq.makeTicketMasterAPICall(globals.eventToken, "/discovery/v2/venues/KovZpZA7AAEA").result
     if eventsrc == None:
@@ -45,6 +46,7 @@ def getDropdownMenuEventVenue(venueID):
 class Select(discord.ui.Select):
     def __init__(self, opt):
         super().__init__(placeholder="Select an event to view more details",max_values=1,min_values=1,options=opt)
+
     async def callback(self, interaction: discord.Interaction):
         print(self.values[0])
         if self.values[0][0] == '1':
@@ -58,7 +60,7 @@ class SelectView(discord.ui.View):
         self.add_item(Select(opt))
 
 def filter3(x, maxEvents):
-    return Filter1Element(x['name'], x['url'], '', '', x['id'], x['images'][0]['url'])
+    return Filter1Element(x['name'], x['url'], '', '', x['id'], venID=x['_embedded']['venues'][0]['id'], image=x['images'][0]['url'])
 
 # returns an array of Filter1Element
 def filter2(x, maxEvents):
@@ -70,17 +72,23 @@ def filter2(x, maxEvents):
 def filter1(events, maxEvents):
     return [ Filter1Element(x['name'], x['url'], \
         x['classifications'][0]['segment']['name'] if 'classifications' in x else None, \
-        x['dates']['start']['localDate'], x['id']) \
+        x['dates']['start']['localDate'], ID=x['id'], venID=x['_embedded']['venues'][0]['id']) \
         for x in events['_embedded']['events'] ][0:maxEvents]
 
 def getDropdownMenu(filter1List, isEvent):
     opt = []
     i = 1
-    idx = '1' if isEvent == True else '0'
-    for x in filter1List:
-        opt.append(discord.SelectOption(label="{}. {}".format(i, x.name), \
-            value = idx + x.ID, emoji = globals.classToEmoji(x.classifications)))
+    if isEvent == True:
+        for x in filter1List:
+            opt.append(discord.SelectOption(label="{}. {}".format(i, x.name), \
+                value = '1' + x.ID, emoji = globals.classToEmoji(x.classifications)))
         i = i + 1
+    else:
+        for x in filter1List:
+            opt.append(discord.SelectOption(label="{}. {}".format(i, x.name), \
+                value = '0' + x.venID, emoji = globals.classToEmoji(x.classifications)))
+        i = i + 1
+    print(opt)
     return SelectView(opt)
 
 def printer(filter1List):
@@ -106,7 +114,8 @@ class Filter1Element:
     classifications = ''
     localDate = ''
     image = ''
-    def __init__(self, name, url, classifications, localDate, ID, image = ''):
+    venID = ''
+    def __init__(self, name, url, classifications, localDate, ID, image = '', venID = ''):
         tmp = lambda x: x if x != None else ''
         self.classifications = tmp(classifications)
         self.name = tmp(name)
@@ -114,6 +123,7 @@ class Filter1Element:
         self.localDate = tmp(localDate)
         self.ID = ID
         self.image = image
+        self.venID = venID
     def toString(self):
         return "{} {} {} \n {} \n\n".format(self.name, \
             globals.classToEmoji(self.classifications), "({})".format(self.localDate) if self.localDate != '' else '', \
@@ -212,7 +222,8 @@ class RDV(commands.Cog):
         embed.set_author(name="Rendezvous Bot", url="https://devpost.com/software/rendezvous-q6jxyi", icon_url="https://cdn.discordapp.com/icons/928825084297244692/1f3858a72bc26b3a617141acaad37a53.png")
         embed.set_footer(text="Data provided by ticketmaster.com")
         await ctx.respond(embed = embed)
-        await ctx.respond(view = getDropdownMenu(filterlist, False))
+        view = getDropdownMenu(filterlist, False)
+        await ctx.respond(view = view)
 
     # city : retrives list of events in city
     @rdv.command(description='Fetches events in a particular city.')
